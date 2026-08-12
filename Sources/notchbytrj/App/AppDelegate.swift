@@ -1,0 +1,341 @@
+import AppKit
+import ApplicationServices
+import IOKit.hid
+import ServiceManagement
+import SwiftUI
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+    private var controller: NotchController?
+    private var statusItem: NSStatusItem?
+    private var clearVaultItem: NSMenuItem?
+    private var privacyItem: NSMenuItem?
+    private var privacyAllItem: NSMenuItem?
+    private var privacySectionItems: [PrivacyMode.Section: NSMenuItem] = [:]
+    private var loginItem: NSMenuItem?
+    private var saveShotsItem: NSMenuItem?
+    private var layoutSwitcherItem: NSMenuItem?
+    private var spellAutocorrectItem: NSMenuItem?
+    private let layoutSwitcher = KeyboardMonitor()
+    private var exceptionsWindow: NSWindow?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        controller = NotchController()
+        controller?.install()
+        installStatusItem()
+
+        let axOptions: [String: Any] = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
+        _ = AXIsProcessTrustedWithOptions(axOptions as CFDictionary)
+        // Accessibility has a prompt-triggering API; Input Monitoring's
+        // equivalent is this one — without it, the switcher's keyboard tap
+        // only ever shows up in System Settings pre-added and switched off,
+        // with no dialog to notice it needs turning on.
+        _ = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+
+        layoutSwitcher.isEnabled = NotchViewModel.layoutSwitcherEnabled
+        layoutSwitcher.spellAutocorrectEnabled = NotchViewModel.spellAutocorrectEnabled
+        layoutSwitcher.start()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        controller?.teardown()
+        layoutSwitcher.stop()
+    }
+
+    // MARK: - Menu bar item
+
+    private func installStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let path = Bundle.main.path(forResource: "StatusIcon", ofType: "pdf"),
+           let image = NSImage(contentsOfFile: path) {
+            image.isTemplate = true
+            item.button?.image = image
+        } else {
+            item.button?.image = NSImage(
+                systemSymbolName: "eye.fill",
+                accessibilityDescription: "notchbytrj"
+            )
+            item.button?.image?.isTemplate = true
+        }
+        item.button?.image?.accessibilityDescription = "notchbytrj"
+
+        let menu = NSMenu()
+        // Enabling is decided here, not guessed from the responder chain: the
+        // clear item below is disabled exactly when the folder is empty.
+        menu.autoenablesItems = false
+        menu.delegate = self
+        menu.addItem(withTitle: "notchbytrj \(Bundle.main.shortVersion)", action: nil, keyEquivalent: "")
+        menu.addItem(.separator())
+
+        let toggle = NSMenuItem(
+            title: localized("Open Panel"),
+            action: #selector(togglePanel),
+            keyEquivalent: ""
+        )
+        toggle.target = self
+        menu.addItem(toggle)
+
+        let login = NSMenuItem(
+            title: localized("Launch at Login"),
+            action: #selector(toggleLaunchAtLogin),
+            keyEquivalent: ""
+        )
+        login.target = self
+        login.state = launchAtLoginEnabled ? .on : .off
+        menu.addItem(login)
+        loginItem = login
+
+        // Sits next to the panel switch rather than among the folder items: it
+        // changes what the panel shows, and it is the one people look for in a
+        // hurry, with the camera already running.
+        //
+        // A submenu rather than a plain switch, because the tabs hold different
+        // things and not everyone wants all of them covered. "All" comes first
+        // and is what most people will ever touch; the sections below it are
+        // for the case where that is too much.
+        let privacy = NSMenuItem(title: localized("Hide Contents"), action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        submenu.autoenablesItems = false
+
+        let all = NSMenuItem(title: localized("All"), action: #selector(togglePrivacyAll), keyEquivalent: "")
+        all.target = self
+        submenu.addItem(all)
+        privacyAllItem = all
+        submenu.addItem(.separator())
+
+        for section in PrivacyMode.Section.allCases {
+            let item = NSMenuItem(
+                title: section.title,
+                action: #selector(togglePrivacySection(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = section.rawValue
+            submenu.addItem(item)
+            privacySectionItems[section] = item
+        }
+
+        privacy.submenu = submenu
+        menu.addItem(privacy)
+        privacyItem = privacy
+
+        let saveShots = NSMenuItem(
+            title: localized("Save Clipboard Screenshots"),
+            action: #selector(toggleSaveClipboardImages),
+            keyEquivalent: ""
+        )
+        saveShots.target = self
+        saveShots.state = NotchViewModel.saveClipboardImagesEnabled ? .on : .off
+        menu.addItem(saveShots)
+        saveShotsItem = saveShots
+
+        let openFolder = NSMenuItem(
+            title: localized("Show Screenshots Folder"),
+            action: #selector(revealScreenshots),
+            keyEquivalent: ""
+        )
+        openFolder.target = self
+        menu.addItem(openFolder)
+
+        // Screenshots accumulate forever by design — nothing in that folder is
+        // deleted behind the user's back. This is the other half of that deal:
+        // one visible, hand-operated way out, with the current size right in
+        // the title so the offer names its price.
+        let clearVault = NSMenuItem(
+            title: localized("Clear Screenshots Folder"),
+            action: #selector(clearScreenshots),
+            keyEquivalent: ""
+        )
+        clearVault.target = self
+        menu.addItem(clearVault)
+        clearVaultItem = clearVault
+
+        let openSnippets = NSMenuItem(
+            title: localized("Show Snippets File"),
+            action: #selector(revealSnippets),
+            keyEquivalent: ""
+        )
+        openSnippets.target = self
+        menu.addItem(openSnippets)
+
+        menu.addItem(.separator())
+
+        let layoutItem = NSMenuItem(
+            title: localized("RU/EN Layout Switcher"),
+            action: #selector(toggleLayoutSwitcher),
+            keyEquivalent: ""
+        )
+        layoutItem.target = self
+        layoutItem.state = NotchViewModel.layoutSwitcherEnabled ? .on : .off
+        menu.addItem(layoutItem)
+        layoutSwitcherItem = layoutItem
+
+        let autocorrectItem = NSMenuItem(
+            title: localized("Spelling Autocorrect"),
+            action: #selector(toggleSpellAutocorrect),
+            keyEquivalent: ""
+        )
+        autocorrectItem.target = self
+        autocorrectItem.state = NotchViewModel.spellAutocorrectEnabled ? .on : .off
+        menu.addItem(autocorrectItem)
+        spellAutocorrectItem = autocorrectItem
+
+        let exceptions = NSMenuItem(
+            title: localized("Switcher Exceptions…"),
+            action: #selector(showExceptions),
+            keyEquivalent: ""
+        )
+        exceptions.target = self
+        menu.addItem(exceptions)
+
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: localized("Quit"), action: #selector(quit), keyEquivalent: "q")
+        quit.target = self
+        menu.addItem(quit)
+
+        item.menu = menu
+        statusItem = item
+    }
+
+    @objc private func togglePanel() {
+        controller?.toggle()
+    }
+
+    /// Everything shown is re-read when the menu opens, not kept fresh in
+    /// between: a menu nobody is looking at deserves no bookkeeping — and a
+    /// state set once at launch quietly goes stale. Launch-at-login is the
+    /// live case: System Settings can switch it off from outside, and the
+    /// checkmark here used to keep claiming otherwise until relaunch (#11).
+    func menuWillOpen(_ menu: NSMenu) {
+        refreshPrivacyItems()
+        loginItem?.state = launchAtLoginEnabled ? .on : .off
+        saveShotsItem?.state = NotchViewModel.saveClipboardImagesEnabled ? .on : .off
+
+        guard let clearVaultItem else { return }
+        // Off the main thread: walking the folder takes as long as the folder
+        // is big, and this is the thread the whole panel lives on (#11). The
+        // menu is already open when the answer lands; the title updates in
+        // place.
+        DispatchQueue.global(qos: .userInitiated).async { [weak clearVaultItem] in
+            let usage = ScreenshotVault.usage()
+            let size = ByteCountFormatter.string(fromByteCount: usage.bytes, countStyle: .file)
+            DispatchQueue.main.async {
+                guard let clearVaultItem else { return }
+                if usage.files == 0 {
+                    clearVaultItem.title = localized("Clear Screenshots Folder")
+                    clearVaultItem.isEnabled = false
+                } else {
+                    clearVaultItem.title = localized("Clear Screenshots Folder (%@)", size)
+                    clearVaultItem.isEnabled = true
+                }
+            }
+        }
+    }
+
+    @objc private func clearScreenshots() {
+        ScreenshotVault.clear()
+        // The cards pointing into that folder just went to the Trash with it.
+        controller?.reloadShelf()
+    }
+
+    @objc private func quit() {
+        NSApp.terminate(nil)
+    }
+
+    @objc private func togglePrivacyAll(_ sender: NSMenuItem) {
+        guard let privacy = controller?.privacy else { return }
+        // Anything short of everything means "turn the rest on too"; only a
+        // full house turns them all off. One press, and no state where the
+        // item says All while half the sections are open.
+        privacy.setCoveringAll(!privacy.coversAll)
+        refreshPrivacyItems()
+    }
+
+    @objc private func togglePrivacySection(_ sender: NSMenuItem) {
+        guard let privacy = controller?.privacy,
+              let raw = sender.representedObject as? String,
+              let section = PrivacyMode.Section(rawValue: raw) else { return }
+        privacy.setCovering(section, !privacy.covers(section))
+        refreshPrivacyItems()
+    }
+
+    /// The parent item carries the summary: a tick when every section is
+    /// covered, a dash when some are. Without it the state is a submenu away,
+    /// and this is the one switch worth reading at a glance.
+    private func refreshPrivacyItems() {
+        guard let privacy = controller?.privacy else { return }
+        privacyItem?.state = privacy.coversAll ? .on : (privacy.coversAny ? .mixed : .off)
+        privacyAllItem?.state = privacy.coversAll ? .on : .off
+        for (section, item) in privacySectionItems {
+            item.state = privacy.covers(section) ? .on : .off
+        }
+    }
+
+    @objc private func toggleSaveClipboardImages(_ sender: NSMenuItem) {
+        UserDefaults.standard.set(
+            !NotchViewModel.saveClipboardImagesEnabled,
+            forKey: NotchViewModel.saveClipboardImagesKey
+        )
+        sender.state = NotchViewModel.saveClipboardImagesEnabled ? .on : .off
+    }
+
+    @objc private func toggleLayoutSwitcher(_ sender: NSMenuItem) {
+        let newValue = !NotchViewModel.layoutSwitcherEnabled
+        UserDefaults.standard.set(newValue, forKey: NotchViewModel.layoutSwitcherEnabledKey)
+        layoutSwitcher.isEnabled = newValue
+        sender.state = newValue ? .on : .off
+    }
+
+    @objc private func toggleSpellAutocorrect(_ sender: NSMenuItem) {
+        let newValue = !NotchViewModel.spellAutocorrectEnabled
+        UserDefaults.standard.set(newValue, forKey: NotchViewModel.spellAutocorrectEnabledKey)
+        layoutSwitcher.spellAutocorrectEnabled = newValue
+        sender.state = newValue ? .on : .off
+    }
+
+    @objc private func showExceptions() {
+        if exceptionsWindow == nil {
+            let hosting = NSHostingController(rootView: ExceptionsView(store: .shared))
+            let window = NSWindow(contentViewController: hosting)
+            window.title = localized("Switcher Exceptions")
+            window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
+            window.isReleasedWhenClosed = false
+            exceptionsWindow = window
+        }
+        exceptionsWindow?.center()
+        exceptionsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func revealScreenshots() {
+        ScreenshotVault.reveal()
+    }
+
+    @objc private func revealSnippets() {
+        SnippetStore.reveal()
+    }
+
+    private var launchAtLoginEnabled: Bool {
+        SMAppService.mainApp.status == .enabled
+    }
+
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        do {
+            if launchAtLoginEnabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {
+            NSLog("notchbytrj: launch-at-login failed: \(error.localizedDescription)")
+        }
+        sender.state = launchAtLoginEnabled ? .on : .off
+    }
+}
+
+extension Bundle {
+    var shortVersion: String {
+        (infoDictionary?["CFBundleShortVersionString"] as? String) ?? "dev"
+    }
+}
+

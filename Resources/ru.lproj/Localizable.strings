@@ -1,0 +1,121 @@
+/* Cyclop — русский. Ключи — английский текст, поэтому строка без перевода
+   просто останется английской, а не превратится в идентификатор. */
+
+/* Вкладки */
+"Music" = "Музыка";
+"Shelf" = "Полка";
+"Clipboard" = "Буфер";
+"Snippets" = "Заготовки";
+"Calendar" = "Календарь";
+"Translate" = "Перевод";
+
+/* Меню-бар */
+"Open Panel" = "Открыть панель";
+"Launch at Login" = "Запускать при входе";
+"Save Clipboard Screenshots" = "Сохранять скриншоты из буфера";
+"Show Screenshots Folder" = "Показать папку скриншотов";
+"Clear Screenshots Folder" = "Очистить папку снимков";
+"Clear Screenshots Folder (%@)" = "Очистить папку снимков (%@)";
+"Show Snippets File" = "Показать файл заготовок";
+"RU/EN Layout Switcher" = "Переключатель раскладки RU/EN";
+"Spelling Autocorrect" = "Автокоррекция орфографии";
+"Switcher Exceptions…" = "Слова-исключения…";
+"Switcher Exceptions" = "Слова-исключения";
+"Words listed here are never touched by the RU/EN switcher." = "Слова из этого списка переключатель RU/EN никогда не трогает.";
+"Add a word…" = "Добавить слово…";
+"Add" = "Добавить";
+"Quit" = "Выйти";
+
+/* Полка */
+"Selected: %d" = "Выбрано: %d";
+"Deselect" = "Снять выбор";
+"Clear" = "Очистить";
+"Copy" = "Копировать";
+"Open" = "Открыть";
+"Show in Finder" = "Показать в Finder";
+"Remove from Shelf" = "Убрать с полки";
+
+/* Музыка */
+"Nothing is playing" = "Ничего не играет";
+
+/* Заготовки */
+"Add a snippet" = "Добавить заготовку";
+"Name" = "Название";
+"Text" = "Текст";
+"Delete" = "Удалить";
+"Nothing here yet — add with +" = "Пока пусто — добавь через +";
+"snippets.json is broken — click to open; nothing is overwritten" = "snippets.json не читается — нажми, чтобы открыть; поверх ничего не пишется";
+
+/* Заметки */
+"Notes" = "Заметки";
+"New Note" = "Новая заметка";
+
+/* Системный монитор */
+"System" = "Система";
+"Normal" = "Норма";
+"Warning" = "Нагрузка";
+"Critical" = "Критично";
+"Power" = "Питание";
+"Reminders" = "Напоминания";
+"Quick Actions" = "Быстрые действия";
+"All Lists" = "Все списки";
+"Nothing due" = "Ничего срочного";
+"See what's due" = "Что нужно сделать";
+"notchbytrj needs access to Reminders to show this tab." = "notchbytrj нужен доступ к Напоминаниям, чтобы показать эту вкладку.";
+"Allow" = "Разрешить";
+"Add a shortcut to get started" = "Добавь команду, чтобы начать";
+"No more shortcuts" = "Больше команд нет";
+"Refresh List" = "Обновить список";
+"No data" = "Нет данных";
+"No connected devices" = "Нет подключённых устройств";
+"%@ to full" = "%@ до полного";
+"Charging" = "Заряжается";
+"%@ left" = "Осталось %@";
+"Plugged in" = "От сети";
+"On battery" = "От батареи";
+"Network" = "Сеть";
+"No active traffic" = "Нет активного трафика";
+"Empty note" = "Пустая заметка";
+"Jot something down…" = "Набросай что-нибудь…";
+
+/* Перевод */
+"Translation Languages…" = "Языки перевода…";
+"Retry" = "Повторить";
+"The %@ → %@ language pack is not installed." = "Не скачан языковой пакет %@ → %@.";
+"macOS does not translate this pair of languages." = "macOS не переводит эту пару языков.";
+
+/* Календарь */
+"Join" = "Подключиться";
+"Join · %@" = "Подключиться · %@";
+"No other meetings this week" = "Других встреч на неделе нет";
+"See your next meetings" = "Показать ближайшие встречи";
+"Cyclop needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "Нужен доступ к Календарю. Это единственное разрешение,\nкоторое просит Cyclop — и только для этой вкладки.";
+"Allow" = "Разрешить";
+"Calendar access is off" = "Доступ к Календарю закрыт";
+"Settings → Privacy → Calendars" = "Настройки → Конфиденциальность → Календари";
+"No more meetings" = "Встреч больше нет";
+"Nothing on the calendar for the next day" = "В ближайшие сутки календарь пуст";
+"Untitled" = "Без названия";
+
+/* Отсчёт со строчной: прописную ставит то место, где строится подпись.
+   Сокращения намеренные: в шапку панели помещается «через 12 мин», но
+   не полное слово с падежом, а сокращение не склоняется ни в каком языке. */
+"now" = "идёт сейчас";
+"any moment" = "вот-вот";
+"tomorrow" = "завтра";
+"in %d min" = "через %d мин";
+"in %d h" = "через %d ч";
+"in %d h %d min" = "через %d ч %d мин";
+"in %d d" = "через %d дн";
+
+/* Сохранённые снимки. Ключ — сам формат даты, чтобы язык мог переставить части
+   в своём порядке. */
+"Screenshot" = "Снимок";
+"yyyy-MM-dd 'at' HH.mm.ss" = "yyyy-MM-dd 'в' HH.mm.ss";
+
+/* Режим приватности: панель закрывает содержимое полем из точек. */
+"Hide Contents" = "Скрывать содержимое";
+"Hidden" = "Скрыто";
+"Show" = "Показать";
+"Hide" = "Скрыть";
+"All" = "Всё";
