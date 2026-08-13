@@ -1,16 +1,17 @@
 import Foundation
 import Combine
 
-/// Words the switcher should never touch — brand names, handles, domains,
-/// anything that looks like gibberish in either language on purpose.
+/// The opposite of `ExceptionListStore`: not "never touch this word", but
+/// "this is a real English word even though the system dictionary has never
+/// heard of it" — a personal domain, a brand, a handle. Without an entry
+/// here, something like "trj" typed on the wrong layout has no dictionary
+/// backing on either side and never gets corrected either way; with one, it
+/// corrects to English exactly like a common word would.
 ///
-/// Backed by a plain text file (one word per line) so it survives restarts:
-/// `~/Library/Application Support/notchbytrj/switcher-exceptions.txt`. This
-/// is the single live copy — the menu bar's "Switcher Exceptions" window
-/// edits the same instance `KeyboardMonitor` reads from, so changes apply
-/// without restarting the app.
-final class ExceptionListStore: ObservableObject {
-    static let shared = ExceptionListStore()
+/// `~/Library/Application Support/notchbytrj/switcher-known-words.txt`,
+/// one word per line — same live-editing setup as the exceptions list.
+final class KnownWordsStore: ObservableObject {
+    static let shared = KnownWordsStore()
 
     @Published private(set) var words: [String] = []
 
@@ -20,14 +21,11 @@ final class ExceptionListStore: ObservableObject {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("notchbytrj", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        fileURL = dir.appendingPathComponent("switcher-exceptions.txt")
+        fileURL = dir.appendingPathComponent("switcher-known-words.txt")
         load()
     }
 
     private func load() {
-        // No defaults seeded here on purpose: an empty list the user emptied
-        // by hand must stay empty on the next launch, not be mistaken for
-        // "the file was never created" and quietly repopulated.
         guard let text = try? String(contentsOf: fileURL, encoding: .utf8) else {
             words = []
             return

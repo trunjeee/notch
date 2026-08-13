@@ -22,8 +22,14 @@
 "Switcher Exceptions…" = "Слова-исключения…";
 "Switcher Exceptions" = "Слова-исключения";
 "Words listed here are never touched by the RU/EN switcher." = "Слова из этого списка переключатель RU/EN никогда не трогает.";
+"Switcher Known Words…" = "Свои слова…";
+"Switcher Known Words" = "Свои слова";
+"Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout." = "Слова из этого списка всегда считаются настоящими английскими — полезно для своего домена, бренда или ника, которых не знает системный словарь, чтобы исправление срабатывало надёжно при наборе не в той раскладке.";
 "Add a word…" = "Добавить слово…";
 "Add" = "Добавить";
+"Save" = "Сохранить";
+"Cancel" = "Отмена";
+"Edit" = "Изменить";
 "Quit" = "Выйти";
 
 /* Полка */

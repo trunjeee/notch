@@ -23,8 +23,14 @@
 "Switcher Exceptions…" = "Switcher Exceptions…";
 "Switcher Exceptions" = "Switcher Exceptions";
 "Words listed here are never touched by the RU/EN switcher." = "Words listed here are never touched by the RU/EN switcher.";
+"Switcher Known Words…" = "Switcher Known Words…";
+"Switcher Known Words" = "Switcher Known Words";
+"Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout." = "Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout.";
 "Add a word…" = "Add a word…";
 "Add" = "Add";
+"Save" = "Save";
+"Cancel" = "Cancel";
+"Edit" = "Edit";
 "Quit" = "Quit";
 
 /* Shelf */

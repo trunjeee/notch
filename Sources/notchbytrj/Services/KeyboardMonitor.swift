@@ -212,6 +212,7 @@ final class KeyboardMonitor {
     private func isValid(_ word: String, language: AppLanguage) -> Bool {
         let lower = word.lowercased()
         if language == .english, Self.knownTechWords.contains(lower) { return true }
+        if language == .english, KnownWordsStore.shared.contains(lower) { return true }
         if word.count == 1, let letter = lower.first {
             let known = (language == .english) ? Self.validEnglishSingleLetters : Self.validRussianSingleLetters
             return known.contains(letter)

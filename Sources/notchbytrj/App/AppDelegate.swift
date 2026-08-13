@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var spellAutocorrectItem: NSMenuItem?
     private let layoutSwitcher = KeyboardMonitor()
     private var exceptionsWindow: NSWindow?
+    private var knownWordsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller = NotchController()
@@ -188,6 +189,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         exceptions.target = self
         menu.addItem(exceptions)
 
+        let knownWords = NSMenuItem(
+            title: localized("Switcher Known Words…"),
+            action: #selector(showKnownWords),
+            keyEquivalent: ""
+        )
+        knownWords.target = self
+        menu.addItem(knownWords)
+
         menu.addItem(.separator())
         let quit = NSMenuItem(title: localized("Quit"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -304,6 +313,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         exceptionsWindow?.center()
         exceptionsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func showKnownWords() {
+        if knownWordsWindow == nil {
+            let hosting = NSHostingController(rootView: KnownWordsView(store: .shared))
+            let window = NSWindow(contentViewController: hosting)
+            window.title = localized("Switcher Known Words")
+            window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
+            window.isReleasedWhenClosed = false
+            knownWordsWindow = window
+        }
+        knownWordsWindow?.center()
+        knownWordsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
