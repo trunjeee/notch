@@ -25,7 +25,7 @@
 "Words listed here are never touched by the RU/EN switcher." = "Words listed here are never touched by the RU/EN switcher.";
 "Switcher Known Words…" = "Switcher Known Words…";
 "Switcher Known Words" = "Switcher Known Words";
-"Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout." = "Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout.";
+"Words listed here always count as real, in Russian or English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout. Add both Latin and Cyrillic spellings freely." = "Words listed here always count as real, in Russian or English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout. Add both Latin and Cyrillic spellings freely.";
 "Add a word…" = "Add a word…";
 "Add" = "Add";
 "Save" = "Save";
@@ -96,7 +96,7 @@
 "Join · %@" = "Join · %@";
 "No other meetings this week" = "No other meetings this week";
 "See your next meetings" = "See your next meetings";
-"Cyclop needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "Cyclop needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab.";
+"notchbytrj needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "notchbytrj needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab.";
 "Allow" = "Allow";
 "Calendar access is off" = "Calendar access is off";
 "Settings → Privacy → Calendars" = "Settings → Privacy → Calendars";

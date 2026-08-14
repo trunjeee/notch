@@ -24,7 +24,7 @@
 "Words listed here are never touched by the RU/EN switcher." = "Слова из этого списка переключатель RU/EN никогда не трогает.";
 "Switcher Known Words…" = "Свои слова…";
 "Switcher Known Words" = "Свои слова";
-"Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout." = "Слова из этого списка всегда считаются настоящими английскими — полезно для своего домена, бренда или ника, которых не знает системный словарь, чтобы исправление срабатывало надёжно при наборе не в той раскладке.";
+"Words listed here always count as real, in Russian or English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout. Add both Latin and Cyrillic spellings freely." = "Слова из этого списка всегда считаются настоящими — и в русском, и в английском — полезно для своего домена, бренда или ника, которых не знает системный словарь, чтобы исправление срабатывало надёжно при наборе не в той раскладке. Можно свободно добавлять и латиницей, и кириллицей.";
 "Add a word…" = "Добавить слово…";
 "Add" = "Добавить";
 "Save" = "Сохранить";
@@ -95,7 +95,7 @@
 "Join · %@" = "Подключиться · %@";
 "No other meetings this week" = "Других встреч на неделе нет";
 "See your next meetings" = "Показать ближайшие встречи";
-"Cyclop needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "Нужен доступ к Календарю. Это единственное разрешение,\nкоторое просит Cyclop — и только для этой вкладки.";
+"notchbytrj needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "Нужен доступ к Календарю. Это единственное разрешение,\nкоторое просит notchbytrj — и только для этой вкладки.";
 "Allow" = "Разрешить";
 "Calendar access is off" = "Доступ к Календарю закрыт";
 "Settings → Privacy → Calendars" = "Настройки → Конфиденциальность → Календари";
