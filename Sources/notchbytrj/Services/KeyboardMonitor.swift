@@ -19,6 +19,11 @@ final class KeyboardMonitor {
     /// word. Punctuation right before the word (". но", "! а") disqualifies
     /// it, and so does two boundary characters in a row.
     private var commaEligible = false
+    /// True right after a digit — "f5", "b2b": a letter run touching a digit
+    /// on either side is an alphanumeric token, not a word in either
+    /// language, and judging one letter of it against the single-letter
+    /// word lists is how "f" next to "5" turned into "а".
+    private var precededByDigit = false
 
     /// Marks CGEvents this class posts itself, so its own event tap doesn't
     /// pick them back up as real typing. A `.listenOnly` tap can't just
@@ -85,6 +90,7 @@ final class KeyboardMonitor {
             // A click — see the comment on the tap's event mask above.
             buffer.removeAll()
             commaEligible = false
+            precededByDigit = false
             return
         }
         if event.getIntegerValueField(.eventSourceUserData) == Self.injectedMarker { return }
@@ -102,6 +108,7 @@ final class KeyboardMonitor {
         if flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate) {
             buffer.removeAll()
             commaEligible = false
+            precededByDigit = false
             return
         }
 
@@ -114,7 +121,25 @@ final class KeyboardMonitor {
         }
 
         if !LayoutTables.letterKeycodes.contains(keycode) {
-            // Word boundary (space/enter/punctuation/arrow/etc.) — run the
+            let rawChar = NSEvent(cgEvent: event)?.characters?.first
+            let hadWord = !buffer.isEmpty
+
+            // Arrows, Home/End, Page Up/Down, F-keys and the like report a
+            // character too — from AppKit's private-use range for function
+            // keys — but they never put text on screen; the cursor just
+            // moved. Treating that character as a real boundary is what
+            // made a correction try to "restore" it as typed text: deleting
+            // one extra character that was never there, then retyping the
+            // key's internal code as a glyph. None of that is a word
+            // boundary in any real sense, so it's not treated as one at all.
+            guard let boundaryChar = rawChar, isPrintableBoundary(boundaryChar) else {
+                buffer.removeAll()
+                commaEligible = false
+                precededByDigit = false
+                return
+            }
+
+            // Word boundary (space/enter/punctuation/etc.) — run the
             // dictionary backstop on the just-finished word, then reset.
             //
             // This is a .listenOnly tap: the boundary key (e.g. the space)
@@ -122,11 +147,15 @@ final class KeyboardMonitor {
             // callback runs and cannot be intercepted. If a correction fires,
             // it has to delete that character too and retype it after the
             // fix, or the backspaces eat into the word instead of the space.
-            let boundaryChar = NSEvent(cgEvent: event)?.characters?.first
-            let hadWord = !buffer.isEmpty
-            checkWordBoundary(boundaryChar: boundaryChar, commaEligible: commaEligible)
+            let isDigitBoundary = boundaryChar.isNumber
+            checkWordBoundary(
+                boundaryChar: boundaryChar,
+                commaEligible: commaEligible,
+                skipCorrection: isDigitBoundary || precededByDigit
+            )
             buffer.removeAll()
             commaEligible = hadWord && boundaryChar == " "
+            precededByDigit = isDigitBoundary
             return
         }
 
@@ -146,8 +175,9 @@ final class KeyboardMonitor {
     /// get half-corrected. Checking only complete words trades that
     /// "before you finish typing" feel for actually being reliable, using
     /// the system spell checker instead of a guess.
-    private func checkWordBoundary(boundaryChar: Character?, commaEligible: Bool) {
+    private func checkWordBoundary(boundaryChar: Character?, commaEligible: Bool, skipCorrection: Bool) {
         guard !buffer.isEmpty else { return }
+        guard !skipCorrection else { return }
 
         let typed = String(buffer.map { $0.typedChar })
         guard !ExceptionListStore.shared.contains(typed) else { return }
@@ -232,6 +262,17 @@ final class KeyboardMonitor {
     ]
     private static let validEnglishSingleLetters: Set<Character> = ["a", "i"]
     private static let validRussianSingleLetters: Set<Character> = ["а", "и", "в", "к", "с", "о", "у", "я"]
+
+    /// Whether a character is actual typed text rather than the code AppKit
+    /// reports for a navigation/function key. Those live in Unicode's
+    /// private-use range 0xF700–0xF8FF (arrows, Home/End, Page Up/Down,
+    /// F-keys, forward-delete, ...); Escape falls outside that range but
+    /// isn't whitespace, punctuation, a symbol, a digit, or a letter either,
+    /// so it's excluded the same way without needing a special case.
+    private func isPrintableBoundary(_ char: Character) -> Bool {
+        if let scalar = char.unicodeScalars.first, (0xF700...0xF8FF).contains(scalar.value) { return false }
+        return char.isWhitespace || char.isNewline || char.isPunctuation || char.isSymbol || char.isNumber || char.isLetter
+    }
 
     // MARK: - Correction
 
