@@ -212,7 +212,11 @@ final class KeyboardMonitor {
     private func isValid(_ word: String, language: AppLanguage) -> Bool {
         let lower = word.lowercased()
         if language == .english, Self.knownTechWords.contains(lower) { return true }
-        if language == .english, KnownWordsStore.shared.contains(lower) { return true }
+        // Not gated on `language`: the word's own script (Latin vs Cyrillic)
+        // already separates a Latin custom word from ever matching Cyrillic
+        // text, so a list holding both English and Russian entries needs no
+        // per-word language tag to stay unambiguous.
+        if KnownWordsStore.shared.contains(lower) { return true }
         if word.count == 1, let letter = lower.first {
             let known = (language == .english) ? Self.validEnglishSingleLetters : Self.validRussianSingleLetters
             return known.contains(letter)

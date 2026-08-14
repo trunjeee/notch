@@ -7,7 +7,7 @@ struct KnownWordsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(localized("Words listed here always count as real English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout."))
+            Text(localized("Words listed here always count as real, in Russian or English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout. Add both Latin and Cyrillic spellings freely."))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .padding(12)
