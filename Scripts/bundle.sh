@@ -88,7 +88,6 @@ clang -dynamiclib -fobjc-arc -O2 \
     -o "$APP/Contents/Resources/libnotchbytrjmedia.dylib" \
     "$ROOT/Sources/notchbytrjMediaHelper/helper.m"
 
-echo "==> ad-hoc signing"
 # Расширенные атрибуты снимаются первыми. iCloud вешает на файлы
 # com.apple.FinderInfo, а codesign отказывается подписывать что-либо с ним —
 # «resource fork, Finder information, or similar detritus not allowed». Папка
@@ -96,15 +95,33 @@ echo "==> ad-hoc signing"
 # репозитория там перестает подписываться, стоило его туда перенести.
 xattr -cr "$APP"
 
-# Ошибка не глушится и не понижается до предупреждения. Раньше отказ печатал
-# мягкую строку и возвращал ноль: скрипт доходил до «done», а в build лежал
-# бандл, про который codesign говорит «code object is not signed at all».
-# Заметить это можно было только по возвращающимся запросам TCC — то есть у
-# того, кто уже поставил приложение.
-codesign --force --deep --sign - "$APP" || {
-    echo "!!! codesign не смог подписать бандл — см. вывод выше" >&2
-    exit 1
-}
+echo "==> signing"
+# Подписываем стабильным self-signed сертификатом, а не ad-hoc: macOS
+# привязывает разрешения TCC (Accessibility, Input Monitoring, микрофон и
+# прочие) к designated requirement. Ad-hoc подпись сводит его к хэшу
+# бинарника, который меняется каждую сборку, — и macOS видит «новое
+# приложение», переспрашивая все разрешения. С сертификатом requirement —
+# «bundle id + сертификат», он переживает любые пересборки. Сертификат
+# создается один раз: Scripts/setup-signing.sh
+SIGN_IDENTITY="${SIGN_IDENTITY:-trj-dev}"
+if security find-identity -v -p codesigning | grep -q "\"$SIGN_IDENTITY\""; then
+    codesign --force --deep --timestamp=none --sign "$SIGN_IDENTITY" "$APP" || {
+        echo "!!! codesign не смог подписать бандл — см. вывод выше" >&2
+        exit 1
+    }
+else
+    # Ошибка не глушится и не понижается до предупреждения. Раньше отказ печатал
+    # мягкую строку и возвращал ноль: скрипт доходил до «done», а в build лежал
+    # бандл, про который codesign говорит «code object is not signed at all».
+    # Заметить это можно было только по возвращающимся запросам TCC — то есть у
+    # того, кто уже поставил приложение.
+    echo "    identity '$SIGN_IDENTITY' не найден — подписываю ad-hoc"
+    echo "    (разрешения будут слетать каждую сборку; создай сертификат: Scripts/setup-signing.sh)"
+    codesign --force --deep --sign - "$APP" || {
+        echo "!!! codesign не смог подписать бандл — см. вывод выше" >&2
+        exit 1
+    }
+fi
 codesign --verify --strict "$APP" || {
     echo "!!! подпись не прошла проверку" >&2
     exit 1
