@@ -273,6 +273,17 @@ final class NotchController {
     /// method per section would be four methods that only forward.
     var privacy: PrivacyMode? { viewModel?.privacy }
 
+    /// Dictation indicator: while the key is held the notch peeks out just
+    /// enough to host the recording animation. Passive — it claims no extra
+    /// clicks, the collapsed active rect stays as it is.
+    func setDictating(_ active: Bool) {
+        viewModel?.isDictating = active
+    }
+
+    func setDictationLevel(_ level: Float) {
+        viewModel?.dictationLevel = CGFloat(level)
+    }
+
     /// The visual half of closing, one pass after the keyboard was let go.
     private func collapse() {
         guard let vm = viewModel, vm.isOpen else { return }

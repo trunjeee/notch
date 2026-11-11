@@ -24,6 +24,7 @@
 "Switcher Exceptions" = "Switcher Exceptions";
 "Words listed here are never touched by the RU/EN switcher." = "Words listed here are never touched by the RU/EN switcher.";
 "Switcher Known Words…" = "Switcher Known Words…";
+"Voice Input (hold right Option)" = "Voice Input (hold right Option)";
 "Switcher Known Words" = "Switcher Known Words";
 "Words listed here always count as real, in Russian or English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout. Add both Latin and Cyrillic spellings freely." = "Words listed here always count as real, in Russian or English — useful for a domain, brand, or handle the system dictionary doesn't know, so it corrects reliably when typed on the wrong layout. Add both Latin and Cyrillic spellings freely.";
 "Add a word…" = "Add a word…";

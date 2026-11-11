@@ -32,7 +32,9 @@ final class KeyboardMonitor {
     /// later. Without this tag, a correction's own backspace/retype was
     /// occasionally read as new input and triggered a second, wrong
     /// correction right on top of the first.
-    private static let injectedMarker: Int64 = 0x4E54524A
+    /// Shared with TextInjector, which stamps dictated text with the same
+    /// marker so the switcher never tries to "correct" it.
+    static let injectedMarker: Int64 = 0x4E54524A
 
     var isEnabled: Bool = true
     /// Separate from `isEnabled`: fixing a wrong layout is nearly always

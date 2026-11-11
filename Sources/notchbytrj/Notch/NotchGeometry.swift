@@ -119,6 +119,10 @@ struct NotchGeometry {
     /// Size of the collapsed target: the notch itself, or the strip above.
     var collapsedSize: CGSize { CGSize(width: notchSize.width, height: collapsedDepth) }
 
+    /// Slightly grown body shown while dictation is recording: just enough
+    /// room for the recording animation to read, nowhere near the open panel.
+    var peekSize: CGSize { CGSize(width: notchSize.width + 116, height: notchSize.height + 46) }
+
     /// Hover target while collapsed, in global screen coordinates. Slightly
     /// taller than the notch so the panel opens just before the pointer lands.
     var hoverRect: CGRect {

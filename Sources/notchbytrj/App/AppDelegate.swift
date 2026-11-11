@@ -17,6 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var layoutSwitcherItem: NSMenuItem?
     private var spellAutocorrectItem: NSMenuItem?
     private let layoutSwitcher = KeyboardMonitor()
+    private let dictation = DictationController()
+    private let voiceInputTrigger = VoiceInputTrigger()
+    private var voiceInputItem: NSMenuItem?
     private var exceptionsWindow: NSWindow?
     private var knownWordsWindow: NSWindow?
 
@@ -36,11 +39,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         layoutSwitcher.isEnabled = NotchViewModel.layoutSwitcherEnabled
         layoutSwitcher.spellAutocorrectEnabled = NotchViewModel.spellAutocorrectEnabled
         layoutSwitcher.start()
+
+        voiceInputTrigger.isEnabled = NotchViewModel.voiceInputEnabled
+        voiceInputTrigger.onPress = { [dictation] in dictation.begin() }
+        voiceInputTrigger.onRelease = { [dictation] in dictation.end() }
+        voiceInputTrigger.start()
+
+        // The recording indicator lives in the notch itself: it peeks out a
+        // little while the key is held and breathes with the mic level.
+        dictation.onStateChange = { [weak controller] active in
+            controller?.setDictating(active)
+        }
+        dictation.onLevel = { [weak controller] level in
+            controller?.setDictationLevel(level)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         controller?.teardown()
         layoutSwitcher.stop()
+        voiceInputTrigger.stop()
+        dictation.cancel()
     }
 
     // MARK: - Menu bar item
@@ -197,6 +216,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         knownWords.target = self
         menu.addItem(knownWords)
 
+        let voiceInput = NSMenuItem(
+            title: localized("Voice Input (hold right Option)"),
+            action: #selector(toggleVoiceInput),
+            keyEquivalent: ""
+        )
+        voiceInput.target = self
+        voiceInput.state = NotchViewModel.voiceInputEnabled ? .on : .off
+        menu.addItem(voiceInput)
+        voiceInputItem = voiceInput
+
         menu.addItem(.separator())
         let quit = NSMenuItem(title: localized("Quit"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -299,6 +328,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let newValue = !NotchViewModel.spellAutocorrectEnabled
         UserDefaults.standard.set(newValue, forKey: NotchViewModel.spellAutocorrectEnabledKey)
         layoutSwitcher.spellAutocorrectEnabled = newValue
+        sender.state = newValue ? .on : .off
+    }
+
+    @objc private func toggleVoiceInput(_ sender: NSMenuItem) {
+        let newValue = !NotchViewModel.voiceInputEnabled
+        UserDefaults.standard.set(newValue, forKey: NotchViewModel.voiceInputEnabledKey)
+        voiceInputTrigger.isEnabled = newValue
         sender.state = newValue ? .on : .off
     }
 

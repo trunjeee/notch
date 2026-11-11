@@ -59,6 +59,11 @@ final class NotchViewModel: ObservableObject {
 
     @Published var isOpen = false
     @Published var isDropTargeted = false
+    /// Voice dictation is recording right now — the notch peeks out a little
+    /// and breathes with the live mic level.
+    @Published var isDictating = false
+    /// Live microphone level while dictating, 0…1.
+    @Published var dictationLevel: CGFloat = 0
     @Published var tab: Tab = .media {
         didSet {
             // Opening the tab only re-checks the status. The permission prompt
@@ -159,7 +164,9 @@ final class NotchViewModel: ObservableObject {
 
     /// Size of the visible body for the current state.
     var bodySize: CGSize {
-        isOpen || isDropTargeted ? geometry.expandedSize : geometry.notchSize
+        if isOpen || isDropTargeted { return geometry.expandedSize }
+        if isDictating { return geometry.peekSize }
+        return geometry.notchSize
     }
 
     /// Off switch for people who copy images all day and do not want them kept.
@@ -180,6 +187,17 @@ final class NotchViewModel: ObservableObject {
         let defaults = UserDefaults.standard
         guard defaults.object(forKey: layoutSwitcherEnabledKey) != nil else { return true }
         return defaults.bool(forKey: layoutSwitcherEnabledKey)
+    }
+
+    /// Off switch for hold-right-Option voice dictation.
+    static let voiceInputEnabledKey = "voiceInputEnabled"
+
+    /// Defaults to on: the feature asks for nothing until the key is first
+    /// pressed, so an unused one costs nothing.
+    static var voiceInputEnabled: Bool {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: voiceInputEnabledKey) != nil else { return true }
+        return defaults.bool(forKey: voiceInputEnabledKey)
     }
 
     /// Same-language spelling autocorrect — separate from the layout

@@ -24,6 +24,9 @@ struct NotchContentView: View {
                 if isOpen {
                     content
                         .transition(.opacity)
+                } else if vm.isDictating {
+                    DictationPeek(level: vm.dictationLevel)
+                        .transition(.opacity)
                 }
             }
             .frame(width: size.width, height: size.height, alignment: .top)
@@ -32,6 +35,7 @@ struct NotchContentView: View {
         .frame(width: size.width + 2 * topRadius, height: size.height, alignment: .top)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(Theme.openAnimation, value: isOpen)
+        .animation(Theme.openAnimation, value: vm.isDictating)
         .animation(Theme.paneAnimation, value: vm.tab)
     }
 
@@ -172,6 +176,43 @@ struct NotchContentView: View {
         case .power:
             PowerPane(power: vm.power, privacy: vm.privacy)
         }
+    }
+}
+
+/// The slightly-grown notch shown while dictation is recording: a red dot
+/// and a handful of bars that breathe with the live microphone level.
+private struct DictationPeek: View {
+    let level: CGFloat
+
+    /// Per-bar gain and response curve. The curves differ on purpose:
+    /// a low exponent lifts a bar early, a high one makes it wait for loud
+    /// speech — so the wave rises unevenly and reads as alive, not as eleven
+    /// copies of one bar. Mirrored, because a symmetric wave looks designed.
+    private let bars: [(gain: CGFloat, curve: CGFloat)] = [
+        (0.42, 0.95), (0.60, 0.82), (0.78, 0.70), (0.92, 0.58),
+        (1.00, 0.48), (0.86, 0.55),
+        (1.00, 0.48), (0.92, 0.58), (0.78, 0.70), (0.60, 0.82),
+        (0.42, 0.95),
+    ]
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Circle()
+                .fill(Color.red)
+                .frame(width: 8, height: 8)
+                .scaleEffect(1 + 0.35 * level)
+            HStack(spacing: 4) {
+                ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .fill(Color.white.opacity(0.85))
+                        .frame(width: 4, height: 5 + bar.gain * 26 * pow(level, bar.curve))
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // The shape's bottom corner rounds inward; nudge the row up off it.
+        .padding(.bottom, 8)
+        .animation(.easeOut(duration: 0.12), value: level)
     }
 }
 

@@ -50,6 +50,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>Notch by trj показывает и отмечает выполненными твои напоминания.</string>
     <key>NSRemindersUsageDescription</key>
     <string>Notch by trj показывает и отмечает выполненными твои напоминания.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Notch by trj превращает речь в текст, пока удерживается правый Option.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Notch by trj распознаёт речь локально на этом Mac, чтобы вставлять текст в любое поле ввода.</string>
     <key>NSHumanReadableCopyright</key><string>MIT License</string>
 </dict>
 </plist>
